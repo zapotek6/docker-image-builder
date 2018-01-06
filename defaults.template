@@ -1,2 +1,2 @@
-REPO="repo-exp.cloud.comelitgroup.com:5000"
-IMAGE="vernemq-cluster"
+REPO="your.private.repo.yourdomain.com:5000"
+IMAGE="sample-image-name"
