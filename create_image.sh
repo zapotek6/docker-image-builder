@@ -11,4 +11,9 @@ if [ -z "${VERSION}" ]; then
   exit 1
 fi
 
+if [ ! -f "./Dockerfile" ]; then
+  echo "ERROR Dockerfile is missing! Fatal error"
+  exit 2
+fi
+
 sudo docker build . -t "${IMAGE}:${VERSION}"
