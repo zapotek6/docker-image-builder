@@ -18,4 +18,4 @@ echo "Remember to update variables in the [defaults] file"
 echo "Remember to update variables in the [defaults] file"
 echo
 echo "Actual content"
-cat ${DST_DIR}/defaults"
+cat "${DST_DIR}/defaults"
