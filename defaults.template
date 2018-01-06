@@ -1,5 +1,5 @@
 REPO="your.private.repo.yourdomain.com:5000"
 IMAGE="sample-image-name"
 
-DIRS_TO_COPY="../../app/target"
-FILES_TO_COPY=""
+DIRS_TO_COPY="../../app/target ../../src"
+FILES_TO_COPY="../fileA ../fileB"
