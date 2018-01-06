@@ -1,0 +1,2 @@
+REPO="repo-exp.cloud.comelitgroup.com:5000"
+IMAGE="vernemq-cluster"
