@@ -3,3 +3,7 @@ IMAGE="sample-image-name"
 
 DIRS_TO_COPY="../../app/target ../../src"
 FILES_TO_COPY="../fileA ../fileB"
+
+DOCKER_BUILD_ARGS_1=""
+DOCKER_BUILD_ARGS_2=""
+DOCKER_BUILD_ARGS_3=""

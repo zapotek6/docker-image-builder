@@ -47,4 +47,26 @@ if [ ! -z "${FILES_TO_COPY}" ]; then
   done
 fi
 
-sudo docker build . -t "${IMAGE}:${VERSION}"
+
+if [ ! "${DOCKER_BUILD_ARGS_1}" == ""]; then
+  echo "Usig docker build args: ${DOCKER_BUILD_ARGS_1}"
+  DOCKER_BUILD_PAR_1="--build-arg ${DOCKER_BUILD_ARGS_1}"
+else
+  unset DOCKER_BUILD_PAR_1
+fi
+
+if [ ! "${DOCKER_BUILD_ARGS_2}" == ""]; then
+  echo "Usig docker build args: ${DOCKER_BUILD_ARGS_2}"
+  DOCKER_BUILD_PAR_2="--build-arg ${DOCKER_BUILD_ARGS_2}"
+else
+  unset DOCKER_BUILD_PAR_2
+fi
+
+if [ ! "${DOCKER_BUILD_ARGS_3}" == ""]; then
+  echo "Usig docker build args: ${DOCKER_BUILD_ARGS_3}"
+  DOCKER_BUILD_PAR_3="--build-arg ${DOCKER_BUILD_ARGS_3}"
+else
+  unset DOCKER_BUILD_PAR_3
+fi
+
+sudo docker build . ${DOCKER_BUILD_PAR_1} ${DOCKER_BUILD_PAR_2} ${DOCKER_BUILD_PAR_3} -t "${IMAGE}:${VERSION}"
