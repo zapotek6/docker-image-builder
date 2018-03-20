@@ -1,3 +1,5 @@
+JOURNAL_FILENAME="journal.log"
+
 REPO="your.private.repo.yourdomain.com:5000"
 IMAGE="sample-image-name"
 
