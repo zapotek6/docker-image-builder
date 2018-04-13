@@ -2,6 +2,8 @@
 
 . ./defaults
 
+JOURNAL_FILENAME=${JOURNAL_FILENAME:-journal.log}
+
 copyDirectories() {
   _SRC=${1}
   _DST=${2}
@@ -49,24 +51,31 @@ fi
 
 
 if [ ! "${DOCKER_BUILD_ARGS_1}" == "" ]; then
-  echo "Usig docker build args: ${DOCKER_BUILD_ARGS_1}"
+  echo "Using docker build args: ${DOCKER_BUILD_ARGS_1}"
   DOCKER_BUILD_PAR_1="--build-arg ${DOCKER_BUILD_ARGS_1}"
 else
   unset DOCKER_BUILD_PAR_1
 fi
 
 if [ ! "${DOCKER_BUILD_ARGS_2}" == "" ]; then
-  echo "Usig docker build args: ${DOCKER_BUILD_ARGS_2}"
+  echo "Using docker build args: ${DOCKER_BUILD_ARGS_2}"
   DOCKER_BUILD_PAR_2="--build-arg ${DOCKER_BUILD_ARGS_2}"
 else
   unset DOCKER_BUILD_PAR_2
 fi
 
 if [ ! "${DOCKER_BUILD_ARGS_3}" == "" ]; then
-  echo "Usig docker build args: ${DOCKER_BUILD_ARGS_3}"
+  echo "Using docker build args: ${DOCKER_BUILD_ARGS_3}"
   DOCKER_BUILD_PAR_3="--build-arg ${DOCKER_BUILD_ARGS_3}"
 else
   unset DOCKER_BUILD_PAR_3
 fi
 
 sudo docker build . ${DOCKER_BUILD_PAR_1} ${DOCKER_BUILD_PAR_2} ${DOCKER_BUILD_PAR_3} -t "${IMAGE}:${VERSION}"
+
+RET=$?
+
+if [ "$RET" == "0" ]; then
+  echo "Image ${IMAGE}:${VERSION} successfully created"
+  echo "`date -R` Image created - [${IMAGE}:${VERSION}]" >> $JOURNAL_FILENAME
+fi
