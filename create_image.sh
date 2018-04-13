@@ -71,11 +71,13 @@ else
   unset DOCKER_BUILD_PAR_3
 fi
 
-sudo docker build . ${DOCKER_BUILD_PAR_1} ${DOCKER_BUILD_PAR_2} ${DOCKER_BUILD_PAR_3} -t "${IMAGE}:${VERSION}"
+docker build . ${DOCKER_BUILD_PAR_1} ${DOCKER_BUILD_PAR_2} ${DOCKER_BUILD_PAR_3} -t "${REPO}/${IMAGE}:${VERSION}" -t "${REPO}/${IMAGE}:latest"
 
 RET=$?
 
 if [ "$RET" == "0" ]; then
   echo "Image ${IMAGE}:${VERSION} successfully created"
   echo "`date -R` Image created - [${IMAGE}:${VERSION}]" >> $JOURNAL_FILENAME
+else
+  exit $RET
 fi

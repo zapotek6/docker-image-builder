@@ -13,14 +13,16 @@ if [ -z "${VERSION}" ]; then
   exit 1
 fi
 
-sudo docker tag "${IMAGE}:${VERSION}" "${REPO}/${IMAGE}:${VERSION}" && \
-sudo docker tag "${IMAGE}:${VERSION}" "${REPO}/${IMAGE}:latest" && \
-sudo docker push "${REPO}/${IMAGE}:${VERSION}" && \
-sudo docker push "${REPO}/${IMAGE}:latest"
+#sudo docker tag "${IMAGE}:${VERSION}" "${REPO}/${IMAGE}:${VERSION}" && \
+#sudo docker tag "${IMAGE}:${VERSION}" "${REPO}/${IMAGE}:latest" && \
+docker push "${REPO}/${IMAGE}:${VERSION}" && \
+docker push "${REPO}/${IMAGE}:latest"
 
 RET=$?
 
 if [ "$RET" == "0" ]; then
   echo "Image ${REPO}/${IMAGE}:${VERSION} successfully pushed"
   echo "`date -R` Image pushed  - [${REPO}/${IMAGE}:${VERSION}]" >> $JOURNAL_FILENAME
+else
+  exit $RET
 fi
