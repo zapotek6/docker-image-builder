@@ -8,14 +8,14 @@ echo "Preparing builder environment"
 echo "Source directory ${SRC_DIR}"
 echo "Destination directory ${DST_DIR}"
 
-cp "${SRC_DIR}/defaults.template" "${DST_DIR}/defaults"
-
 ln -fs "${SRC_DIR}/create_image.sh" ${DST_DIR}
 ln -fs "${SRC_DIR}/push_image.sh" ${DST_DIR}
 
+if [ ! -f ${DST_DIR}/defaults ]; then
+    cp "${SRC_DIR}/defaults.template" "${DST_DIR}/defaults"
 
-echo "Remember to update variables in the [defaults] file"
-echo "Remember to update variables in the [defaults] file"
-echo
-echo "Actual content"
-cat "${DST_DIR}/defaults"
+    echo "Remember to update variables in the [defaults] file"
+    echo
+    echo "Actual content"
+    cat "${DST_DIR}/defaults"
+fi 
