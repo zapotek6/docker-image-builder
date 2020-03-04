@@ -1,0 +1,10 @@
+
+cd ./files/residorg-php-restyling
+
+COMMIT_SHA1=`git rev-parse HEAD`
+PHP_CONTENT="<?php \n\
+	echo 'GIT COMMIT:   $COMMIT_SHA1<br>';
+	echo 'DOCKER IMAGE: ${IMAGE}:${VERSION}';"
+
+echo -e $PHP_CONTENT > version.php
+

@@ -3,6 +3,12 @@
 . ./defaults
 
 JOURNAL_FILENAME=${JOURNAL_FILENAME:-journal.log}
+HOOKS_DIR="./hooks"
+EXECUTE_WITH_SHELL="/bin/bash"
+
+init() {
+  [ ! -d "$HOOKS_DIR" ] && mkdir -p $HOOKS_DIR
+}
 
 copyDirectories() {
   _SRC=${1}
@@ -16,9 +22,45 @@ copyFiles() {
   cp  ${1} ${2}
 }
 
+execHooks() {
+  __RADIX=$1
+  __CURR_DIR=`pwd`
+  for script in ${HOOKS_DIR}/*
+  do
+          __RUN="FALSE"
+          __SCRIPT_NAME=`basename $script`
+          echo "Parsing scripts $script"
+
+          [[ "$__SCRIPT_NAME" == *"$__RADIX"* ]] && __RUN="TRUE"
+
+          if [ "$__RUN" == "TRUE" ]; then
+                  echo "Running per create script `basename $script`"
+                $EXECUTE_WITH_SHELL $script
+                  RET=$?
+                  [ $RET -ne 0 ] && exit 3
+                  cd $__CURR_DIR
+          fi
+  done
+}
+
+execPostCreateScripts() {
+  __CURR_DIR=`pwd`
+  for script in ./scripts/create/post_*
+  do
+	  $EXECUTE_WITH_SHELL $script
+	  RET=$?
+	  [ $RET -ne 0 ] && exit 3
+	  cd $__CURR_DIR
+  done
+}
+
 ##### MAIN #####
 
-VERSION="${1}"
+export VERSION="${1}"
+export REPO
+export IMAGE
+
+init
 
 if [ -z "${VERSION}" ]; then
   echo "Missing ${IMAGE} image version"
@@ -71,6 +113,8 @@ else
   unset DOCKER_BUILD_PAR_3
 fi
 
+execHooks pre_create
+
 docker build . ${DOCKER_BUILD_PAR_1} ${DOCKER_BUILD_PAR_2} ${DOCKER_BUILD_PAR_3} -t "${REPO}/${IMAGE}:${VERSION}" -t "${REPO}/${IMAGE}:latest"
 
 RET=$?
@@ -81,3 +125,5 @@ if [ "$RET" == "0" ]; then
 else
   exit $RET
 fi
+
+execHooks post_create
