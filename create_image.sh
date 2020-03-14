@@ -62,6 +62,8 @@ export IMAGE
 
 init
 
+execHooks pre_create
+
 if [ -z "${VERSION}" ]; then
   echo "Missing ${IMAGE} image version"
   echo
@@ -112,8 +114,6 @@ if [ ! "${DOCKER_BUILD_ARGS_3}" == "" ]; then
 else
   unset DOCKER_BUILD_PAR_3
 fi
-
-execHooks pre_create
 
 docker build . ${DOCKER_BUILD_PAR_1} ${DOCKER_BUILD_PAR_2} ${DOCKER_BUILD_PAR_3} -t "${REPO}/${IMAGE}:${VERSION}" -t "${REPO}/${IMAGE}:latest"
 

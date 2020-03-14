@@ -35,6 +35,8 @@ VERSION="${1}"
 
 init
 
+execHooks pre_push
+
 if [ -z "${VERSION}" ]; then
   echo "Missing ${IMAGE} image version"
   echo
@@ -45,7 +47,7 @@ fi
 #sudo docker tag "${IMAGE}:${VERSION}" "${REPO}/${IMAGE}:${VERSION}" && \
 #sudo docker tag "${IMAGE}:${VERSION}" "${REPO}/${IMAGE}:latest" && \
 
-execHooks pre_push
+
 
 docker push "${REPO}/${IMAGE}:${VERSION}" && \
 docker push "${REPO}/${IMAGE}:latest"
