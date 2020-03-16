@@ -128,3 +128,28 @@ fi
 
 
 execHooks post_create
+
+
+# Push image
+
+if [ "${AUTO_PUSH^^}" == "YES" ]; then
+
+  execHooks pre_push
+
+  docker push "${REPO}/${IMAGE}:${VERSION}" && \
+
+  RET=$?
+
+  if [ "$RET" == "0" ]; then
+    echo "Image ${REPO}/${IMAGE}:${VERSION} successfully pushed"
+    echo "`date -R` Image pushed  - [${REPO}/${IMAGE}:${VERSION}]" >> $JOURNAL_FILENAME
+  else
+    exit $RET
+  fi
+
+  if [ "${AUTO_PUSH_LATEST_TAG^^}" == "YES" ]; then
+    docker push "${REPO}/${IMAGE}:latest"
+  fi
+
+  execHooks post_push
+fi
