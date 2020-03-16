@@ -54,7 +54,7 @@ execHooks() {
   __CURR_DIR=`pwd`
 
   pushd . &>/dev/null
-  for script in `find ${HOOKS_DIR} -type f -a -name "${__RADIX}*" -not -name '*.disable'`
+  for script in `find ${HOOKS_DIR} -type f -a -name "${__RADIX}*" -not -name '*.disable' | sort`
   do
           
           __RUN="FALSE"
