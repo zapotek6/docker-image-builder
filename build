@@ -1,20 +1,12 @@
 #!/bin/bash
 
-. ./defaults
-
-JOURNAL_FILENAME=${JOURNAL_FILENAME:-journal.log}
-
-VERBOSE_OUTPUT=${VERBOSE_OUTPUT^^}
-
-
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-ORANGE='\033[0;33m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
 printHelp() {
   echo "TODO HELP"
+}
+
+_exit() {
+  popd &>/dev/null
+  exit $1
 }
 
 init() {
@@ -23,7 +15,7 @@ init() {
 
 logFATAL() {
   echo -e "${RED} ${1}. Fatal error exiting${NC}"
-  exit $2
+  _exit $2
 }
 
 logERR() {
@@ -171,7 +163,7 @@ createImage() {
 
   if [ -z "${CREATE_LATEST_TAG}" ]; then
     logFATAL "CREATE_LATEST_TAG variable is not set. You can add it in the defaults file"
-    exit 1
+    _exit 1
   fi
 
   IMAGE_TO_CREATE="${REPO}/${IMAGE}:${VERSION}"
@@ -218,6 +210,20 @@ pushImage() {
 }
 
 ##### MAIN #####
+
+pushd `dirname $0` &>/dev/null
+
+. ./defaults
+
+JOURNAL_FILENAME=${JOURNAL_FILENAME:-journal.log}
+
+VERBOSE_OUTPUT=${VERBOSE_OUTPUT^^}
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+ORANGE='\033[0;33m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 
 #export VERSION="${1}"
 #export REPO
@@ -280,7 +286,7 @@ do
       ;;
     "--help")
       printHelp
-      exit 1
+      _exit 1
       ;;
     *)
       ;;
@@ -309,10 +315,10 @@ case $ACTION in
           ;;
         "TEST_FUNCTION")
           logINFO "Nothing to do"
-          exit 1
+          _exit 1
           ;;
         *)
           logINFO "Usage ....."
-          exit 1
+          _exit 1
           ;;
 esac
