@@ -3,11 +3,46 @@
 . ./defaults
 
 JOURNAL_FILENAME=${JOURNAL_FILENAME:-journal.log}
-HOOKS_DIR="./hooks"
-EXECUTE_WITH_SHELL="/bin/bash"
+
+VERBOSE_OUTPUT=${VERBOSE_OUTPUT^^}
+
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+ORANGE='\033[0;33m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+printHelp() {
+  echo "TODO HELP"
+}
 
 init() {
   [ ! -d "$HOOKS_DIR" ] && mkdir -p $HOOKS_DIR
+}
+
+logFATAL() {
+  echo -e "${RED} ${1}. Fatal error exiting${NC}"
+  exit $2
+}
+
+logERR() {
+  echo -e "${RED} ${1} ${NC}"
+}
+
+logWARN() {
+  echo -e "${ORANGE} ${1} ${NC}"
+}
+
+logINFO() {
+  echo "$1"
+}
+
+logACTION() {
+  echo -e "${GREEN} ${1} ${NC}"
+}
+logToJournal() {
+  [ -f "${JOURNAL_FILENAME}" ] && echo "$1" > ${JOURNAL_FILENAME}
 }
 
 copyDirectories() {
@@ -25,131 +60,260 @@ copyFiles() {
 execHooks() {
   __RADIX=$1
   __CURR_DIR=`pwd`
-  for script in ${HOOKS_DIR}/*
+  
+  pushd . &>/dev/null
+  for script in `find ${HOOKS_DIR} -type f -a -name "${__RADIX}*" -not -name '*.disable'`
   do
+          
           __RUN="FALSE"
-          __SCRIPT_NAME=`basename $script`
-          #echo "Parsing scripts $script"
-
-          [[ "$__SCRIPT_NAME" == *"$__RADIX"* ]] && __RUN="TRUE"
-
+          [[ -f "${script}" ]] && __RUN="TRUE"
+          echo "script ${script} - $__RUN"
           if [ "$__RUN" == "TRUE" ]; then
-                  echo "Running script `basename $script`"
+                logACTION "Execute hook `basename ${script}`"
                 . $script
-                  RET=$?
-                  [ $RET -ne 0 ] && exit 3
+                RET=$?
+                  [ "$RET" != "0" ] && logFATAL "${script} exited with code ${RET}", 3
                   cd $__CURR_DIR
           fi
   done
+
+  popd &>/dev/null
+}
+
+dockerBuild() {
+  _IMAGE=$1
+  _PAR_1=$2
+  _PAR_2=$3
+  _PAR_3=$4
+
+  if [ "${VERBOSE_OUTPUT}" == "YES" ]; then
+    docker build . ${_PAR_1} ${_PAR_2} ${_PAR_3} -t ${_IMAGE}
+  else
+    docker build . ${_PAR_1} ${_PAR_2} ${_PAR_3} -t ${_IMAGE} &>/dev/null
+  fi
+}
+
+dockerTag() {
+  _SRC_IMAGE=$1
+  _DST_IMAGE=$1
+  
+  if [ "${VERBOSE_OUTPUT}" == "YES" ]; then
+    docker tag ${_SRC_IMAGE} ${_DST_IMAGE}
+  else
+    docker tag ${_SRC_IMAGE} ${_DST_IMAGE} &>/dev/null
+  fi
+}
+
+dockerPush() {
+  _IMAGE=$1
+  
+  if [ "${VERBOSE_OUTPUT}" == "YES" ]; then
+    docker push ${_IMAGE}
+  else
+    docker push ${_IMAGE} &>/dev/null
+  fi
+}
+
+parseVersion() {
+  [ ! -z "${VERSION}" ] && [ ! -z "${FORCE_VERSION}" ] && logWARN "image version will be overwritten from [${VERSION}] to [${FORCE_VERSION}]"
+
+  [ ! -z "${FORCE_VERSION}" ] && VERSION=${FORCE_VERSION}
+
+  [ -z "${VERSION}" ] && VERSION=${FORCE_VERSION}
+}
+
+createImage() {
+
+  execHooks pre_create
+
+  parseVersion
+
+  [ -z "${VERSION}" ] && logFATAL "image version not specified" 1
+
+  [ ! -f "./Dockerfile" ] && logFATAL "ERROR Dockerfile is missing!" 2
+  
+  if [ ! -z "${DIRS_TO_COPY}" ]; then
+    echo "Copying directories: ${DIRS_TO_COPY}"
+    for srcDir in ${DIRS_TO_COPY}
+    do
+      copyDirectories ${srcDir} .
+    done
+  fi
+
+  if [ ! -z "${FILES_TO_COPY}" ]; then
+    echo "Copying files: ${FILES_TO_COPY}"
+    for srcFile in ${FILES_TO_COPY}
+    do
+      copyFiles ${srcFile} .
+    done
+  fi
+
+
+  if [ ! "${DOCKER_BUILD_ARGS_1}" == "" ]; then
+    echo "Using docker build args: ${DOCKER_BUILD_ARGS_1}"
+    DOCKER_BUILD_PAR_1="--build-arg ${DOCKER_BUILD_ARGS_1}"
+  else
+    unset DOCKER_BUILD_PAR_1
+  fi
+
+  if [ ! "${DOCKER_BUILD_ARGS_2}" == "" ]; then
+    echo "Using docker build args: ${DOCKER_BUILD_ARGS_2}"
+    DOCKER_BUILD_PAR_2="--build-arg ${DOCKER_BUILD_ARGS_2}"
+  else
+    unset DOCKER_BUILD_PAR_2
+  fi
+
+  if [ ! "${DOCKER_BUILD_ARGS_3}" == "" ]; then
+    echo "Using docker build args: ${DOCKER_BUILD_ARGS_3}"
+    DOCKER_BUILD_PAR_3="--build-arg ${DOCKER_BUILD_ARGS_3}"
+  else
+    unset DOCKER_BUILD_PAR_3
+  fi
+
+  if [ -z "${CREATE_LATEST_TAG}" ]; then
+    logFATAL "CREATE_LATEST_TAG variable is not set. You can add it in the defaults file"
+    exit 1
+  fi
+
+  IMAGE_TO_CREATE="${REPO}/${IMAGE}:${VERSION}"
+  logACTION "create image ${IMAGE_TO_CREATE}"
+  dockerBuild ${IMAGE_TO_CREATE} ${DOCKER_BUILD_PAR_1} ${DOCKER_BUILD_PAR_2} ${DOCKER_BUILD_PAR_3}
+    [ "$?" != "0" ] && logFATAL "error creating image ${IMAGE_TO_CREATE}. Exiting" 1
+    logToJournal "`date -R` Image created - [${IMAGE_TO_CREATE}]" >> $JOURNAL_FILENAME
+
+  if [ "${CREATE_LATEST_TAG^^}" == "YES" ]; then
+    IMAGE_TO_TAG="${REPO}/${IMAGE}:latest"
+    logACTION "create tag image ${IMAGE_TO_TAG}"
+    dockerTag ${IMAGE_TO_CREATE} ${IMAGE_TO_TAG}
+      [ "$?" != "0" ] && logFATAL "error tagging image ${IMAGE_TO_TAG}. Exiting" 1
+      logToJournal "`date -R` Image tagged - [${IMAGE_TO_TAG}]" >> $JOURNAL_FILENAME
+  fi
+
+  execHooks post_create
+}
+
+pushImage() {
+  execHooks pre_push
+
+  parseVersion
+  
+  [ -z "${VERSION}" ] && logFATAL "image version not specified" 1
+
+  IMAGE_TO_PUSH="${REPO}/${IMAGE}:${VERSION}"
+  logACTION "push image ${IMAGE_TO_PUSH}"
+  dockerPush "${IMAGE_TO_PUSH}"
+    [ "$?" != "0" ] && logFATAL "error pushing image ${IMAGE_TO_PUSH}. Exiting" 1
+    logToJournal "`date -R` Image pushed  - [${IMAGE_TO_PUSH}]" >> $JOURNAL_FILENAME
+
+  # Push image with tag latest
+
+  if [ "${PUSH_LATEST_TAG^^}" == "YES" ]; then
+    IMAGE_TO_PUSH="${REPO}/${IMAGE}:latest"
+    logACTION "push image ${IMAGE_TO_PUSH}"
+    dockerPush "${IMAGE_TO_PUSH}"
+      [ "$?" != 0 ] && logFATAL "error pushing image ${IMAGE_TO_PUSH}. Exiting" 1
+      logToJournal "`date -R` Image pushed  - [${IMAGE_TO_PUSH}]" >> $JOURNAL_FILENAME
+  fi
+
+  execHooks post_push
 }
 
 ##### MAIN #####
 
-export VERSION="${1}"
-export REPO
-export IMAGE
+#export VERSION="${1}"
+#export REPO
+#export IMAGE
+
+unset ACTION
+
+if [[ "${AUTO_CREATE^^}" == "YES" && "${AUTO_PUSH^^}" == "YES" ]]; then 
+  ACTION=CREATE_PUSH
+else
+  [ "${AUTO_CREATE^^}" == "YES" ] && ACTION=CREATE
+  [ "${AUTO_PUSH^^}" == "YES" ] && ACTION=PUSH
+fi
+
+[ "${AUTO_CREATE_LATEST_TAG^^}" == "YES" ] && CREATE_LATEST_TAG=YES
+[ "${AUTO_PUSH_LATEST_TAG^^}" == "YES" ] && PUSH_LATEST_TAG=YES
+
+
+INPUT_PARAMETERS="$*"
+#analyze input parameters
+while (( "$#" ));
+do
+  case $1 in
+    "--debug")
+      DEBUG=1
+      VERBOSE_OUTPUT=YES
+      ;;
+    "--create")
+      ACTION="CREATE"
+      ;;
+    "--create-push")
+      ACTION="CREATE_PUSH"
+      ;;
+    "--push")
+      ACTION="PUSH"
+      ;;
+    "--create-latest")
+      CREATE_LATEST_TAG=YES
+      ;;
+    "--no-create-latest")
+      CREATE_LATEST_TAG=NO
+      ;;
+    "--push-latest")
+      PUSH_LATEST_TAG=YES
+      ;;
+    "--no-push-latest")
+      PUSH_LATEST_TAG=NO
+      ;;
+    "--image-version")
+      shift
+      FORCE_VERSION="$1"
+      ;;
+    "--repo")
+      shift
+      REPO="$1"
+      ;;
+    "--image")
+      shift
+      REPO="$1"
+      ;;
+    "--help")
+      printHelp
+      exit 1
+      ;;
+    *)
+      ;;
+  esac
+  shift
+done
+
+if [  ! -z $DEBUG ]; then
+        echo All parameters
+        echo $INPUT_PARAMETERS
+        echo
+fi
 
 init
 
-execHooks pre_create
-
-if [ -z "${VERSION}" ]; then
-  echo "Missing ${IMAGE} image version"
-  echo
-  echo "Usage: ${0} <image version>"
-  exit 1
-fi
-
-if [ ! -f "./Dockerfile" ]; then
-  echo "ERROR Dockerfile is missing! Fatal error"
-  exit 2
-fi
-
-
-if [ ! -z "${DIRS_TO_COPY}" ]; then
-  echo "Copying directories: ${DIRS_TO_COPY}"
-  for srcDir in ${DIRS_TO_COPY}
-  do
-    copyDirectories ${srcDir} .
-  done
-fi
-
-if [ ! -z "${FILES_TO_COPY}" ]; then
-  echo "Copying files: ${FILES_TO_COPY}"
-  for srcFile in ${FILES_TO_COPY}
-  do
-    copyFiles ${srcFile} .
-  done
-fi
-
-
-if [ ! "${DOCKER_BUILD_ARGS_1}" == "" ]; then
-  echo "Using docker build args: ${DOCKER_BUILD_ARGS_1}"
-  DOCKER_BUILD_PAR_1="--build-arg ${DOCKER_BUILD_ARGS_1}"
-else
-  unset DOCKER_BUILD_PAR_1
-fi
-
-if [ ! "${DOCKER_BUILD_ARGS_2}" == "" ]; then
-  echo "Using docker build args: ${DOCKER_BUILD_ARGS_2}"
-  DOCKER_BUILD_PAR_2="--build-arg ${DOCKER_BUILD_ARGS_2}"
-else
-  unset DOCKER_BUILD_PAR_2
-fi
-
-if [ ! "${DOCKER_BUILD_ARGS_3}" == "" ]; then
-  echo "Using docker build args: ${DOCKER_BUILD_ARGS_3}"
-  DOCKER_BUILD_PAR_3="--build-arg ${DOCKER_BUILD_ARGS_3}"
-else
-  unset DOCKER_BUILD_PAR_3
-fi
-
-if [ -z "${CREATE_LATEST_TAG}" ]; then
-  echo "CREATE_LATEST_TAG variable is not set"
-  echo "You can add it in the defaults file"
-  exit 1
-fi
-
-
-docker build . ${DOCKER_BUILD_PAR_1} ${DOCKER_BUILD_PAR_2} ${DOCKER_BUILD_PAR_3} -t "${REPO}/${IMAGE}:${VERSION}"
-
-RET=$?
-
-if [ "$RET" == "0" ]; then
-  echo "Image ${IMAGE}:${VERSION} successfully created"
-  echo "`date -R` Image created - [${IMAGE}:${VERSION}]" >> $JOURNAL_FILENAME
-else
-  exit $RET
-fi
-
-if [ "${CREATE_LATEST_TAG^^}" == "YES" ]; then
-    docker tag "${REPO}/${IMAGE}:${VERSION}" "${REPO}/${IMAGE}:latest"
-fi
-
-
-execHooks post_create
-
-
-# Push image
-
-if [ "${AUTO_PUSH^^}" == "YES" ]; then
-
-  execHooks pre_push
-
-  docker push "${REPO}/${IMAGE}:${VERSION}" && \
-
-  RET=$?
-
-  if [ "$RET" == "0" ]; then
-    echo "Image ${REPO}/${IMAGE}:${VERSION} successfully pushed"
-    echo "`date -R` Image pushed  - [${REPO}/${IMAGE}:${VERSION}]" >> $JOURNAL_FILENAME
-  else
-    exit $RET
-  fi
-
-  if [ "${AUTO_PUSH_LATEST_TAG^^}" == "YES" ]; then
-    docker push "${REPO}/${IMAGE}:latest"
-  fi
-
-  execHooks post_push
-fi
+case $ACTION in
+        "CREATE")
+          createImage
+          ;;
+        "PUSH")
+          pushImage
+          ;;
+        "CREATE_PUSH")
+          createImage
+          pushImage
+          ;;
+        "TEST_FUNCTION")
+          logINFO "Nothing to do"
+          exit 1
+          ;;
+        *)
+          logINFO "Usage ....."
+          exit 1
+          ;;
+esac
