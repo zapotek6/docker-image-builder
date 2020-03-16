@@ -60,14 +60,13 @@ copyFiles() {
 execHooks() {
   __RADIX=$1
   __CURR_DIR=`pwd`
-  
+
   pushd . &>/dev/null
   for script in `find ${HOOKS_DIR} -type f -a -name "${__RADIX}*" -not -name '*.disable'`
   do
           
           __RUN="FALSE"
           [[ -f "${script}" ]] && __RUN="TRUE"
-          echo "script ${script} - $__RUN"
           if [ "$__RUN" == "TRUE" ]; then
                 logACTION "Execute hook `basename ${script}`"
                 . $script
