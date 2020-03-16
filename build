@@ -86,7 +86,7 @@ dockerBuild() {
 
 dockerTag() {
   _SRC_IMAGE=$1
-  _DST_IMAGE=$1
+  _DST_IMAGE=$2
   
   if [ "${VERBOSE_OUTPUT}" == "YES" ]; then
     docker tag ${_SRC_IMAGE} ${_DST_IMAGE}
