@@ -1,4 +1,5 @@
 JOURNAL_FILENAME="journal.log"
+OUTPUT_LOG_FILENAME="output.log"
 
 REPO="your.private.repo.yourdomain.com:5000"
 IMAGE="sample-image-name"
