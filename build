@@ -34,7 +34,7 @@ logACTION() {
   echo -e "${GREEN} ${1} ${NC}"
 }
 logToJournal() {
-  [ -f "${JOURNAL_FILENAME}" ] && echo "$1" > ${JOURNAL_FILENAME}
+  [ -f "${JOURNAL_FILENAME}" ] && echo "$1" >> ${JOURNAL_FILENAME}
 }
 
 copyDirectories() {
