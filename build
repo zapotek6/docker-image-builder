@@ -84,7 +84,7 @@ dockerBuild() {
   if [ "${VERBOSE_OUTPUT}" == "YES" ]; then
     docker build . ${_PAR_1} ${_PAR_2} ${_PAR_3} -t ${_IMAGE}
   else
-    docker build . ${_PAR_1} ${_PAR_2} ${_PAR_3} -t ${_IMAGE} &>${OUTPUT_LOG_FILENAME}
+    docker build . ${_PAR_1} ${_PAR_2} ${_PAR_3} -t ${_IMAGE} 2>&1 >> ${OUTPUT_LOG_FILENAME}
   fi
 }
 
@@ -95,7 +95,7 @@ dockerTag() {
   if [ "${VERBOSE_OUTPUT}" == "YES" ]; then
     docker tag ${_SRC_IMAGE} ${_DST_IMAGE}
   else
-    docker tag ${_SRC_IMAGE} ${_DST_IMAGE} &>${OUTPUT_LOG_FILENAME}
+    docker tag ${_SRC_IMAGE} ${_DST_IMAGE} 2>&1 >> ${OUTPUT_LOG_FILENAME}
   fi
 }
 
@@ -105,7 +105,7 @@ dockerPush() {
   if [ "${VERBOSE_OUTPUT}" == "YES" ]; then
     docker push ${_IMAGE}
   else
-    docker push ${_IMAGE} &>${OUTPUT_LOG_FILENAME}
+    docker push ${_IMAGE} 2>&1 >> ${OUTPUT_LOG_FILENAME}
   fi
 }
 
