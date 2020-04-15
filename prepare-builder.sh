@@ -17,6 +17,10 @@ if [ ! -d ${DST_DIR}/hooks ]; then
     cp -r "${SRC_DIR}/hooks_example" "${DST_DIR}/hooks"
 fi 
 
+if [ ! -f ${DST_DIR}/Dockerfile ]; then
+    cp "${SRC_DIR}/Dockerfile.sample" "${DST_DIR}/Dockerfile"
+fi
+
 if [ ! -f ${DST_DIR}/defaults ]; then
     cp "${SRC_DIR}/defaults.template" "${DST_DIR}/defaults"
 
