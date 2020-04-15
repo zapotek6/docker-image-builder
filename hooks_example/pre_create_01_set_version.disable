@@ -1,32 +1,19 @@
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-
 # Find docker base image version
 DOCKER_BASE_IMAGE_SHA1=`git rev-parse HEAD`
 DOCKER_BASE_IMAGE_SHORT_SHA1=`git rev-parse --short HEAD`
-echo "Web App commit: ${DOCKER_BASE_IMAGE_SHA1}"
-echo "Web App short commit: ${DOCKER_BASE_IMAGE_SHORT_SHA1}"
+echo "Image commit: ${DOCKER_BASE_IMAGE_SHA1}"
+echo "Image short commit: ${DOCKER_BASE_IMAGE_SHORT_SHA1}"
 
-BASE_DOCKER_IMAGE_VERSION=${DOCKER_BASE_IMAGE_SHORT_SHA1}
+DOCKER_IMAGE_VERSION=${DOCKER_BASE_IMAGE_SHORT_SHA1}
 
-BASE_DOCKER_IMAGE_TAG=`git tag --contains ${DOCKER_BASE_IMAGE_SHA1}`
-[ "${BASE_DOCKER_IMAGE_TAG}" != "" ] && echo "Found a TAG ${BASE_DOCKER_IMAGE_TAG}. I'll use it for versioning the image" && export BASE_DOCKER_IMAGE_VERSION="${BASE_DOCKER_IMAGE_TAG}"
+DOCKER_IMAGE_TAG=`git tag --contains ${DOCKER_BASE_IMAGE_SHA1}`
+[ "${DOCKER_IMAGE_TAG}" != "" ] && echo "Found a TAG ${DOCKER_IMAGE_TAG}. I'll use it for versioning the image" && export DOCKER_IMAGE_VERSION="${DOCKER_IMAGE_TAG}"
 
-echo -e "Base Docker image version: ${CYAN} ${BASE_DOCKER_IMAGE_VERSION} ${NC}"
+echo -e "Base Docker image version: ${CYAN} ${DOCKER_IMAGE_VERSION} ${NC}"
 
-
-# Find web app version
-cd ./files/residorg-php
-
-WEB_APP_SHA1=`git rev-parse HEAD`
-WEB_APP_SHORT_SHA1=`git rev-parse --short HEAD`
-echo "Web App commit: ${WEB_APP_SHA1}"
-echo "Web App short commit: ${WEB_APP_SHORT_SHA1}"
-
-export VERSION="${BASE_DOCKER_IMAGE_VERSION}-${WEB_APP_SHORT_SHA1}"
-
-WEB_APP_TAG=`git tag --contains ${WEB_APP_SHA1}`
-[ "${WEB_APP_TAG}" != "" ] && echo "Found a TAG ${WEB_APP_TAG}. I'll use it for versioning the image" && export VERSION="${BASE_DOCKER_IMAGE_VERSION}-${WEB_APP_TAG}"
+export VERSION="${FROM_IMAGE_VERSION}-${DOCKER_IMAGE_VERSION}"
 
 echo -e "Use IMAGE_VERSION: ${CYAN} ${VERSION} ${NC}"
