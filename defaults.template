@@ -1,8 +1,13 @@
 JOURNAL_FILENAME="journal.log"
 OUTPUT_LOG_FILENAME="output.log"
 
-REPO="your.private.repo.yourdomain.com:5000"
-IMAGE="sample-image-name"
+FROM_IMAGE_NAME="replace-with-source-image-name"
+FROM_IMAGE_VERSION="replace-with-source-image-version"
+
+FROM_IMAGE="${FROM_IMAGE_NAME}:${FROM_IMAGE_VERSION}"
+
+TO_IMAGE_REPO="replace-with-destination-repository"
+TO_IMAGE_NAME="replace-with-destination-image-name"
 
 VERBOSE_OUTPUT=no
 
@@ -14,6 +19,13 @@ AUTO_CREATE_LATEST_TAG=no
 AUTO_PUSH=no
 AUTO_PUSH_LATEST_TAG=no
 
-DOCKER_BUILD_ARGS_1=""
-DOCKER_BUILD_ARGS_2=""
-DOCKER_BUILD_ARGS_3=""
+
+# you can add your own variables
+#_BUILD_OPENSSL=false
+#_OPENSSL_GIT_REPO="https://github.com/openssl/openssl.git"
+#_OPENSSL_GIT_TAG="OpenSSL_1_1_1f"
+
+# Docker build-time variables
+#DOCKER_BUILD_ARGS_1="MYVAR=value"
+#DOCKER_BUILD_ARGS_2=""
+#DOCKER_BUILD_ARGS_3=""

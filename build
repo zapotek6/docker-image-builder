@@ -77,14 +77,16 @@ execHooks() {
 
 dockerBuild() {
   _IMAGE=$1
-  _PAR_1=$2
-  _PAR_2=$3
-  _PAR_3=$4
+  _PAR_IMG_NAME=$2
+  _PAR_IMG_VER=$3
+  _PAR_1=$4
+  _PAR_2=$5
+  _PAR_3=$6
 
   if [ "${VERBOSE_OUTPUT}" == "YES" ]; then
-    docker build . ${_PAR_1} ${_PAR_2} ${_PAR_3} -t ${_IMAGE}
+    docker build . ${_PAR_IMG_NAME} ${_PAR_IMG_VER} ${_PAR_1} ${_PAR_2} ${_PAR_3} -t ${_IMAGE}
   else
-    docker build . ${_PAR_1} ${_PAR_2} ${_PAR_3} -t ${_IMAGE} 2>&1 >> ${OUTPUT_LOG_FILENAME}
+    docker build . ${_PAR_IMG_NAME} ${_PAR_IMG_VER} ${_PAR_1} ${_PAR_2} ${_PAR_3} -t ${_IMAGE} 2>&1 >> ${OUTPUT_LOG_FILENAME}
   fi
 }
 
@@ -165,19 +167,40 @@ createImage() {
     unset DOCKER_BUILD_PAR_3
   fi
 
+  if [ ! "${FROM_IMAGE_NAME}" == "" ]; then
+    #echo "Using docker build args: FROM_IMAGE_NAME=${FROM_IMAGE_NAME}"
+    BUILDPAR_FROM_IMAGE_NAME="--build-arg FROM_IMAGE_NAME=${FROM_IMAGE_NAME}"
+  else
+    unset BUILDPAR_FROM_IMAGE_NAME
+  fi
+
+  if [ ! "${FROM_IMAGE_VERSION}" == "" ]; then
+    #echo "Using docker build args: FROM_IMAGE_VERSION=${FROM_IMAGE_VERSION}"
+    BUILDPAR_FROM_IMAGE_VERSION="--build-arg FROM_IMAGE_VERSION=${FROM_IMAGE_VERSION}"
+  else
+    unset BUILDPAR_FROM_IMAGE_VERSION
+  fi
+
+  echo "Using source image ${FROM_IMAGE_NAME}:${FROM_IMAGE_VERSION}"
+
   if [ -z "${CREATE_LATEST_TAG}" ]; then
     logFATAL "CREATE_LATEST_TAG variable is not set. You can add it in the defaults file"
     _exit 1
   fi
 
-  IMAGE_TO_CREATE="${REPO}/${IMAGE}:${VERSION}"
+  IMAGE_TO_CREATE="${TO_IMAGE_REPO}/${TO_IMAGE_NAME}:${VERSION}"
   logACTION "create image ${IMAGE_TO_CREATE}"
-  dockerBuild ${IMAGE_TO_CREATE} ${DOCKER_BUILD_PAR_1} ${DOCKER_BUILD_PAR_2} ${DOCKER_BUILD_PAR_3}
+  dockerBuild ${IMAGE_TO_CREATE} \
+                   ${BUILDPAR_FROM_IMAGE_NAME} \
+                   ${BUILDPAR_FROM_IMAGE_VERSION} \
+                   ${DOCKER_BUILD_PAR_1} \
+                   ${DOCKER_BUILD_PAR_2} \
+                   ${DOCKER_BUILD_PAR_3}
     [ "$?" != "0" ] && logFATAL "error creating image ${IMAGE_TO_CREATE}. Exiting" 1
     logToJournal "`date -R` Image created - [${IMAGE_TO_CREATE}]" >> $JOURNAL_FILENAME
 
   if [ "${CREATE_LATEST_TAG^^}" == "YES" ]; then
-    IMAGE_TO_TAG="${REPO}/${IMAGE}:latest"
+    IMAGE_TO_TAG="${TO_IMAGE_REPO}/${TO_IMAGE_NAME}:latest"
     logACTION "create tag image ${IMAGE_TO_TAG}"
     dockerTag ${IMAGE_TO_CREATE} ${IMAGE_TO_TAG}
       [ "$?" != "0" ] && logFATAL "error tagging image ${IMAGE_TO_TAG}. Exiting" 1
@@ -194,7 +217,7 @@ pushImage() {
   
   [ -z "${VERSION}" ] && logFATAL "image version not specified" 1
 
-  IMAGE_TO_PUSH="${REPO}/${IMAGE}:${VERSION}"
+  IMAGE_TO_PUSH="${TO_IMAGE_REPO}/${TO_IMAGE_NAME}:${VERSION}"
   logACTION "push image ${IMAGE_TO_PUSH}"
   dockerPush "${IMAGE_TO_PUSH}"
     [ "$?" != "0" ] && logFATAL "error pushing image ${IMAGE_TO_PUSH}. Exiting" 1
@@ -203,7 +226,7 @@ pushImage() {
   # Push image with tag latest
 
   if [ "${PUSH_LATEST_TAG^^}" == "YES" ]; then
-    IMAGE_TO_PUSH="${REPO}/${IMAGE}:latest"
+    IMAGE_TO_PUSH="${TO_IMAGE_REPO}/${TO_IMAGE_NAME}:latest"
     logACTION "push image ${IMAGE_TO_PUSH}"
     dockerPush "${IMAGE_TO_PUSH}"
       [ "$?" != 0 ] && logFATAL "error pushing image ${IMAGE_TO_PUSH}. Exiting" 1
