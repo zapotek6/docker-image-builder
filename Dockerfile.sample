@@ -1,0 +1,15 @@
+ARG FROM_IMAGE_NAME
+ARG FROM_IMAGE_VERSION
+
+FROM ${FROM_IMAGE_NAME}:${FROM_IMAGE_VERSION}
+
+LABEL maintainer="replace-with-your-email"
+
+# RUN apt-get update && \
+#     apt-get install --no-install-recommends -y \
+#         rsyslog \
+#         tcpdump \
+#         telnet \
+#         nano
+
+COPY files/ /

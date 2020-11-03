@@ -1,0 +1,59 @@
+CYAN='\033[0;36m'
+RED='\033[0;31m'
+LRED='\033[1;31m'
+GREEN='\033[0;32m'
+LGREEN='\033[1;32m'
+NC='\033[0m' # No Color
+
+if [ "${_BUILD_OPENSSL^^}" != "TRUE" ]; then
+    echo -e "${CYAN}Skipping openssl build${NC}"
+    return 0
+fi
+
+
+HOST_ARCH=`arch`
+
+if [ "${HOST_ARCH}" != "x86_64" ]; then
+    echo -e "${RED}WARNING!!! THIS BUILDING SYSTEM HAS NEVER BEEN USED WITH THIS ARCHITECTURE ${HOST_ARCH}${NC}"
+fi
+
+LIBCRYPTO="libcrypto.so.1.1"
+LIBSSL="libssl.so.1.1"
+
+HA_LIBCRYPTO="${LIBCRYPTO}-${HOST_ARCH}-${FROM_IMAGE_VERSION}"
+HA_LIBSSL="${LIBSSL}-${HOST_ARCH}-${FROM_IMAGE_VERSION}"
+
+OPENSSL_BUILD_DIR="./components/openssl"
+OPENSSL_DESTINATION_DIR="./files/usr/lib/${HOST_ARCH}-linux-gnu"
+
+COMPILE_OPENSSL=false
+
+echo -e "${CYAN}Check openssl libraries${NC}"
+#echo "${OPENSSL_BUILD_DIR}/${HA_LIBCRYPTO}"
+#echo "${OPENSSL_BUILD_DIR}/${HA_LIBSSL}"
+
+[ ! -f "${OPENSSL_BUILD_DIR}/${HA_LIBCRYPTO}" ] && COMPILE_OPENSSL=true
+[ ! -f "${OPENSSL_BUILD_DIR}/${HA_LIBSSL}" ] && COMPILE_OPENSSL=true
+
+#echo "${COMPILE_OPENSSL^^}"
+
+if [ "${COMPILE_OPENSSL^^}" == "TRUE" ]; then
+    echo -e "${LRED}Build openssl REQUIRED${NC}"
+    ${OPENSSL_BUILD_DIR}/build.sh
+else
+    echo -e "${GREEN}Build openssl not needed${NC}"
+fi
+
+if [ -f "${OPENSSL_BUILD_DIR}/${HA_LIBCRYPTO}" ]; then
+    cp ${OPENSSL_BUILD_DIR}/${HA_LIBCRYPTO} ${OPENSSL_DESTINATION_DIR}/${LIBCRYPTO}
+else
+    echo -e "${RED}ERROR!!! ${OPENSSL_BUILD_DIR}/${HA_LIBCRYPTO} not found!${NC}"
+    exit 1
+fi
+
+if [ -f "${OPENSSL_BUILD_DIR}/${HA_LIBSSL}" ]; then
+    cp ${OPENSSL_BUILD_DIR}/${HA_LIBSSL} ${OPENSSL_DESTINATION_DIR}/${LIBCRYPTO}
+else
+    echo -e "${RED}ERROR!!! ${OPENSSL_BUILD_DIR}/${HA_LIBSSL} not found!${NC}"
+    exit 1
+fi
