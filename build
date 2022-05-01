@@ -1,7 +1,21 @@
 #!/bin/bash
 
 printHelp() {
-  echo "TODO HELP"
+  echo "--debug               print debug information"
+  echo "--create              create only image"
+  echo "--create-push         create and push image"
+  echo "--push                push only image"
+  echo "--create-latest       create also image with latest tag version"
+  echo "--no-create-latest    do not create also image with latest tag version"
+  echo "--push-latest         push image with latest tag version"
+  echo "--no-push-latest      no not push image with latest tag version"
+  echo "--image-version       set image tag version"
+  echo "--repo                set images repository"
+  echo "--image               set image name"
+  echo "--help                print this help"
+
+  echo "The cmd line arguments override the build.conf configuration"
+
 }
 
 _exit() {
@@ -184,7 +198,7 @@ createImage() {
   echo "Using source image ${FROM_IMAGE_NAME}:${FROM_IMAGE_VERSION}"
 
   if [ -z "${CREATE_LATEST_TAG}" ]; then
-    logFATAL "CREATE_LATEST_TAG variable is not set. You can add it in the defaults file"
+    logFATAL "CREATE_LATEST_TAG variable is not set. You can add it in the build.conf file"
     _exit 1
   fi
 
@@ -240,7 +254,7 @@ pushImage() {
 
 pushd `dirname $0` &>/dev/null
 
-. ./defaults
+. ./build.conf
 
 JOURNAL_FILENAME=${JOURNAL_FILENAME:-journal.log}
 OUTPUT_LOG_FILENAME=${OUTPUT_LOG_FILENAME:-output.log}
@@ -319,6 +333,8 @@ do
       _exit 1
       ;;
     *)
+      printHelp
+      _exit 1
       ;;
   esac
   shift
@@ -347,7 +363,7 @@ case $ACTION in
           _exit 1
           ;;
         *)
-          logINFO "Usage ....."
+          printHelp
           _exit 1
           ;;
 esac

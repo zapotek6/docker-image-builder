@@ -21,11 +21,16 @@ if [ ! -f ${DST_DIR}/Dockerfile ]; then
     cp "${SRC_DIR}/Dockerfile.sample" "${DST_DIR}/Dockerfile"
 fi
 
-if [ ! -f ${DST_DIR}/defaults ]; then
-    cp "${SRC_DIR}/defaults.template" "${DST_DIR}/defaults"
+if [ -f ${DST_DIR}/defaults ]; then
+    echo "Rename [defaults] file to [build.conf]"
+    mv ${DST_DIR}/defaults ${DST_DIR}/build.conf
+fi
 
-    echo "Remember to update variables in the [defaults] file"
+if [ ! -f ${DST_DIR}/build.conf ]; then
+    cp "${SRC_DIR}/build.conf.template" "${DST_DIR}/build.conf"
+
+    echo "Remember to update variables in the [build.conf] file"
     echo
     echo "Actual content"
-    cat "${DST_DIR}/defaults"
+    cat "${DST_DIR}/build.conf"
 fi 
