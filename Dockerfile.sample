@@ -1,15 +1,29 @@
-ARG FROM_IMAGE_NAME
-ARG FROM_IMAGE_VERSION
-
-FROM ${FROM_IMAGE_NAME}:${FROM_IMAGE_VERSION}
+FROM $DFROM_PHP_COMPOSER_IMAGE AS composer
+FROM $DFROM_NODE_IMAGE AS node
+FROM $DFROM_PHP_IMAGE
 
 LABEL maintainer="replace-with-your-email"
 
-# RUN apt-get update && \
-#     apt-get install --no-install-recommends -y \
-#         rsyslog \
-#         tcpdump \
-#         telnet \
-#         nano
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    iproute2 \
+    telnet \
+    inetutils-ping \
+    curl \
+    libcurl4 \
+    libcurl4-openssl-dev \
+    tcpdump \
+    nano \
+    mariadb-client \
+    netcat \
+    zip \
+    unzip
 
 COPY files/ /
+
+RUN chmod a+x /usr/local/bin/startup.sh
+
+EXPOSE 8080
+
+CMD ["startup.sh"]
