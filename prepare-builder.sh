@@ -27,7 +27,7 @@ if [ -f ${DST_DIR}/defaults ]; then
 fi
 
 if [ ! -f ${DST_DIR}/build.conf ]; then
-    cp "${SRC_DIR}/build.conf.template" "${DST_DIR}/build.conf"
+    cp "${SRC_DIR}/build.conf.example" "${DST_DIR}/build.conf"
 
     echo "Remember to update variables in the [build.conf] file"
     echo

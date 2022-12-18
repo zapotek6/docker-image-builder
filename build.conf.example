@@ -1,0 +1,55 @@
+# Variable that start with 
+#
+#  DFROM_
+#  DARG_
+#
+# will be available in the dockerfile as ARG
+# The DFROM_ version is added before the FROM clause, while the DARG_
+# are appended after the FROM clause
+#
+
+JOURNAL_FILENAME="journal.log"
+OUTPUT_LOG_FILENAME="output.log"
+
+
+# Docker images 
+PHP_COMPOSER_IMAGE_VERSION="2.4.4"
+DFROM_PHP_COMPOSER_IMAGE="composer:${PHP_COMPOSER_IMAGE_VERSION}"
+
+NODE_IMAGE_VERSION="19.3.0-bullseye"
+DFROM_NODE_IMAGE="node:${NODE_IMAGE_VERSION}"
+
+PHP_IMAGE_VERSION="8.0.16-apache-bullseye"
+DFROM_PHP_IMAGE="php:${PHP_IMAGE_VERSION}"
+
+# Base docker image
+FROM_IMAGE=$DARG_PHP_IMAGE
+
+# XDEBUG
+# https://xdebug.org/docs/compat
+DEPENDENCY_XDEBUG_VERSION="3.2.0"
+DARG_DEPENDENCY_XDEBUG="xdebug-${DEPENDENCY_XDEBUG_VERSION}"
+
+# PHP DOCUMENTATOR
+# https://github.com/phpDocumentor/phpDocumentor/releases
+DEPENDENCY_PHP_DOCUMENTATOR_VERSION="v3.3.1"
+DARG_DEPENDENCY_PHP_DOCUMENTATOR_URL="https://github.com/phpDocumentor/phpDocumentor/releases/download/${DEPENDENCY_PHP_DOCUMENTATOR_VERSION}/phpDocumentor.phar"
+
+# GOOGLE CLOUD SQL PROXY
+# https://github.com/GoogleCloudPlatform/cloud-sql-proxy/releases
+DEPENDENCY_GOOGLE_CLOUD_SQL_PROXY_VERSION="v1.33.1"
+DARG_DEPENDENCY_GOOGLE_CLOUD_SQL_PROXY_URL="https://storage.googleapis.com/cloudsql-proxy/${DEPENDENCY_GOOGLE_CLOUD_SQL_PROXY_VERSION}/cloud_sql_proxy.linux.amd64"
+
+
+TO_IMAGE_REPO="gcr.io/residorx-playground"
+TO_IMAGE_NAME="residorg-2020-web"
+
+VERBOSE_OUTPUT=yes
+
+HOOKS_DIR="./hooks"
+
+AUTO_CREATE=yes
+AUTO_CREATE_LATEST_TAG=yes
+
+AUTO_PUSH=yes
+AUTO_PUSH_LATEST_TAG=yes
