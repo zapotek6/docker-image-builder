@@ -221,7 +221,7 @@ createImage() {
     unset BUILDPAR_FROM_IMAGE_VERSION
   fi
 
-  echo "Using source image ${FROM_IMAGE_NAME}:${FROM_IMAGE_VERSION}"
+  echo "Using source image ${FROM_IMAGE}"
 
   if [ -z "${CREATE_LATEST_TAG}" ]; then
     logFATAL "CREATE_LATEST_TAG variable is not set. You can add it in the build.conf file"
